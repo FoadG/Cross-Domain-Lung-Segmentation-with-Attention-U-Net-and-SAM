@@ -1,0 +1,50 @@
+# configs/sam_lora.yaml
+# SAM fine-tuning with LoRA on image encoder + gradient checkpointing.
+# Memory: ~8-10 GB VRAM with batch=1. RISKY with batch=2 on 12 GB.
+# This is the SECONDARY path. Run only after Freeze-Encoder succeeds.
+
+model:
+  name: "sam_lora_encoder"
+  sam_model_id: "facebook/sam-vit-base"
+  freeze_vision_encoder: false   # LoRA adapts encoder
+  freeze_prompt_encoder: false
+  train_mask_decoder: true
+  # Custom LoRA parameters for vision encoder attention layers
+  lora:
+    rank: 8
+    alpha: 16
+    # Target: the fused QKV linear in each attention block
+    # Module path: vision_encoder.layers.{i}.attn.qkv
+    target_module_name: "qkv"
+    # Dropout on LoRA branch
+    dropout: 0.05
+  cache_image_embeddings: false  # Cannot cache — embeddings change with LoRA
+
+training:
+  n_epochs: 50
+  # CRITICAL: batch=1 to avoid OOM on 12-14 GB VRAM
+  batch_size: 1
+  # Effective batch = 2 via gradient accumulation
+  grad_accum_steps: 2
+  learning_rate: 5.0e-5          # Lower LR for LoRA stability
+  weight_decay: 1.0e-5
+  scheduler: "cosine"
+  scheduler_t_max: 50
+  scheduler_eta_min: 1.0e-6
+  early_stopping_patience: 10
+  early_stopping_min_delta: 0.001
+  loss: "combined"
+  loss_alpha: 0.5
+  num_workers: 2
+  use_amp: true
+  # REQUIRED for LoRA path to stay within memory budget
+  gradient_checkpointing: true
+  multimask_output: false
+
+augmentation:
+  box_perturbation: true
+
+inference:
+  use_ensemble: true
+  multimask_output: false
+  batch_size: 1

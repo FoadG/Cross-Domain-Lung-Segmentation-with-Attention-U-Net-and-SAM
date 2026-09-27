@@ -1,0 +1,36 @@
+# Core deep learning
+torch==2.1.2
+torchvision==0.16.2
+
+# HuggingFace ecosystem
+transformers==4.38.2
+
+# Data & image processing
+numpy==1.26.4
+Pillow==10.2.0
+opencv-python-headless==4.9.0.80
+albumentations==1.4.0
+scipy==1.12.0
+scikit-image==0.22.0
+
+# Config management
+omegaconf==2.3.0
+
+# Kaggle dataset download
+kaggle==1.6.6
+
+# Logging & progress
+tqdm==4.66.2
+tensorboard==2.16.2
+
+# Visualization & reporting
+matplotlib==3.8.3
+seaborn==0.13.2
+pandas==2.2.1
+
+# Testing
+pytest==8.0.2
+pytest-cov==4.1.0
+
+# Utilities
+PyYAML==6.0.1

@@ -1,0 +1,75 @@
+# configs/base.yaml
+# Global configuration shared across all experiment variants.
+# All other configs inherit and override these values.
+
+project:
+  name: "cross_domain_lung_segmentation"
+  version: "1.0.0"
+  seed: 42
+
+paths:
+  data_root: "./data/raw"
+  processed_root: "./data/processed"
+  splits_root: "./data/splits"
+  checkpoints_root: "./checkpoints"
+  logs_root: "./logs"
+  reports_root: "./reports/output"
+  visualizations_root: "./visualizations"
+  # Precomputed box cache from U-Net inference
+  prompt_cache: "./data/processed/prompt_boxes.csv"
+  # Fallback box statistics (computed once from Shenzhen-train)
+  fallback_box_stats: "./data/processed/fallback_box_stats.json"
+  # Normalization statistics (computed from Shenzhen-train only)
+  norm_stats: "./data/processed/norm_stats.json"
+
+dataset:
+  kaggle_dataset: "nikhilpandey360/chest-xray-masks-and-labels"
+  # Montgomery filename prefix — used to identify source
+  montgomery_prefix: "MCUCXR_"
+  # Shenzhen filename prefix
+  shenzhen_prefix: "CHNCXR_"
+  # Minimum mask area (fraction of image) to consider a connected component valid
+  min_component_area_fraction: 0.01
+  # Minimum fraction of pixels that must be foreground for a mask to be valid
+  min_mask_foreground_fraction: 0.005
+  # Native pipeline resolution (after initial resize, before SAM's 1024x1024)
+  native_size: 512
+  # U-Net input resolution
+  unet_size: 256
+
+split:
+  # Shenzhen split ratios (Montgomery is always full cross-domain test)
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15
+  # Random state for reproducible split
+  split_seed: 42
+
+prompt:
+  # Box expansion margin as fraction of image dimension
+  # Applied to ensure Outer-Box (per audit finding CRITICAL-01)
+  box_margin_fraction: 0.12
+  # Perturbation range during SAM training (pixels in native_size space)
+  perturb_min_pixels: 0
+  perturb_max_pixels: 30
+  # Ensemble variant 1: original box (margin = box_margin_fraction)
+  ensemble_v1_extra_margin: 0.0
+  # Ensemble variant 2: larger box
+  ensemble_v2_extra_margin: 0.05
+  # Ensemble variant 3: shifted box (shift in fraction of box dimension)
+  ensemble_v3_shift_fraction: 0.05
+  # Majority voting threshold (fraction of ensemble size)
+  ensemble_vote_threshold: 0.5
+
+evaluation:
+  # Binary threshold for mask prediction
+  threshold: 0.5
+  # HD95 percentile
+  hd_percentile: 95.0
+
+logging:
+  level: "INFO"
+  # Log metrics every N steps
+  log_interval_steps: 10
+  # Save checkpoint every N epochs
+  checkpoint_every_epochs: 1

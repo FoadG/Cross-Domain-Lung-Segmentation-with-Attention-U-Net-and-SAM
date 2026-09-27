@@ -1,0 +1,47 @@
+# configs/sam_freeze.yaml
+# SAM fine-tuning with FROZEN image encoder.
+# Only the mask decoder is trained.
+# Memory: ~5.8-8 GB VRAM. Safe on 12 GB targets.
+
+model:
+  name: "sam_freeze_encoder"
+  sam_model_id: "facebook/sam-vit-base"
+  # Which components are trainable
+  freeze_vision_encoder: true
+  freeze_prompt_encoder: false   # small, let it adapt
+  train_mask_decoder: true
+  # Whether to precompute and cache image embeddings
+  # True saves GPU time during training (encoder runs once per image)
+  cache_image_embeddings: true
+  cache_dir: "./data/processed/sam_embeddings"
+
+training:
+  n_epochs: 50
+  # Physical batch size (effective = batch_size * grad_accum_steps)
+  batch_size: 4
+  grad_accum_steps: 1            # effective batch = 4
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-5
+  scheduler: "cosine"
+  scheduler_t_max: 50
+  scheduler_eta_min: 1.0e-6
+  early_stopping_patience: 10
+  early_stopping_min_delta: 0.001
+  loss: "combined"
+  loss_alpha: 0.5
+  num_workers: 2
+  use_amp: true                  # FP16 for reduced VRAM
+  # Gradient checkpointing — not needed for Freeze-Encoder (encoder not in graph)
+  gradient_checkpointing: false
+  # SAM-specific: use single mask output for determinism during training
+  multimask_output: false
+
+augmentation:
+  # Box perturbation during training for robustness (PP-SAM)
+  box_perturbation: true
+
+inference:
+  # Use ensemble for final evaluation
+  use_ensemble: true
+  multimask_output: false
+  batch_size: 2

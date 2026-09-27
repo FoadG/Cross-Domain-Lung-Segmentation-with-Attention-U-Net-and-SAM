@@ -1,0 +1,53 @@
+# configs/unet.yaml
+# U-Net architecture and training configuration.
+# Inherits defaults from base.yaml; values here take precedence.
+
+model:
+  name: "attention_unet"
+  in_channels: 1         # Grayscale CXR
+  out_channels: 1        # Binary lung mask
+  # Encoder feature dimensions at each scale
+  features: [32, 64, 128, 256]
+  # Dropout rate for regularization
+  dropout: 0.1
+
+training:
+  # Cross-validation for robustness assessment
+  n_folds: 5
+  n_epochs: 100
+  batch_size: 8
+  # AdamW optimizer
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-5
+  # Cosine annealing LR schedule
+  scheduler: "cosine"
+  scheduler_t_max: 100
+  scheduler_eta_min: 1.0e-6
+  # Early stopping on validation Dice (per-image mean)
+  early_stopping_patience: 15
+  early_stopping_min_delta: 0.001
+  # Loss function
+  loss: "combined"       # Dice + BCE with equal weighting
+  loss_alpha: 0.5        # weight for Dice (1-alpha for BCE)
+  # Number of workers for DataLoader
+  num_workers: 2
+  # Mixed precision training
+  use_amp: false         # U-Net is small; AMP overhead not worth it
+
+augmentation:
+  # Applied to Shenzhen-train only
+  enabled: true
+  horizontal_flip_prob: 0.5
+  rotation_limit: 10     # degrees
+  brightness_limit: 0.1
+  contrast_limit: 0.1
+  # Grid distortion for slight shape variation
+  grid_distortion_prob: 0.2
+  grid_distortion_num_steps: 5
+  grid_distortion_distort_limit: 0.2
+
+inference:
+  # Threshold for binary mask
+  threshold: 0.5
+  batch_size: 16
+  use_amp: true
